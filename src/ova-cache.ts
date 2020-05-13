@@ -5,16 +5,7 @@ import * as https from "https";
 
 const sha256File = require("sha256-file");
 
-async function ensureHomeDirectoryExists(): Promise<void> {
-    try {
-        let stats = await fs.promises.stat(homeDirectoryPath);
-        if (!stats.isDirectory())
-            return Promise.reject(homeDirectoryPath + " exists but is not a directory");
-    } catch (e) {
 
-        await fs.promises.mkdir(homeDirectoryPath, {recursive: true});
-    }
-}
 
 async function sha256sum(path: PathLike): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -66,7 +57,6 @@ async function checkCachedImage(path: string, checksum: string): Promise<boolean
 }
 
 export async function ensureBaseImageExists(cachedImagePath: string, checksum: string, downloadUrl: string): Promise<void> {
-    await ensureHomeDirectoryExists();
 
     let cacheOk = await checkCachedImage(cachedImagePath, checksum);
 

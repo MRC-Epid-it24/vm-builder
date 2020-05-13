@@ -9,10 +9,13 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/fs-extra": "^8.1.0",
     "typescript": "^3.8.3"
   },
   "dependencies": {
     "@types/node": "^13.13.5",
+    "fs-extra": "^9.0.0",
+    "replace": "^1.2.0",
     "sha256-file": "^1.0.0"
   }
 }
