@@ -5,9 +5,9 @@ export interface ExecResult {
     stderr: string;
 }
 
-export async function exec_display_output(command: string, args: ReadonlyArray<string>): Promise<void> {
+export async function exec_display_output(command: string, args: ReadonlyArray<string>, workingDirectory?: string): Promise<void> {
     return new Promise((resolve, reject) => {
-        let child = spawn(command, args);
+        let child = spawn(command, args, { cwd: workingDirectory });
         child.stdout.setEncoding("utf8");
         child.stdout.on('data', function(data) {
             process.stdout.write(data);

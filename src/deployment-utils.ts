@@ -67,14 +67,12 @@ export class DeploymentUtils {
             },
             {
                 regex: "ansible_become_pass:.*$",
-                replacement: "ansible_password: intake24",
+                replacement: "ansible_become_pass: intake24",
             }
         ]);
 
         await ssh_keygen(path.resolve(directory, "ssh"), "deploy");
 
-        console.log(path.resolve(this.deploymentDirectory, "create-deploy-user.sh"));
-
-        await exec_display_output(path.resolve(this.deploymentDirectory, "create-deploy-user.sh"), [buildId]);
+        await exec_display_output(path.resolve(this.deploymentDirectory, "create-deploy-user.sh"), [buildId], this.deploymentDirectory);
     }
 }

@@ -1,15 +1,14 @@
 import * as fs from "fs";
 import {PathLike} from "fs";
-import {homeDirectoryPath, imageFilePath} from "./constants";
+
 import * as https from "https";
 
 const sha256File = require("sha256-file");
 
 
-
 async function sha256sum(path: PathLike): Promise<string> {
     return new Promise((resolve, reject) => {
-        sha256File(imageFilePath, (error: any, sum: string) => {
+        sha256File(path, (error: any, sum: string) => {
             if (error)
                 reject(error);
             else
