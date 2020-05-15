@@ -1,4 +1,3 @@
-import {ensureBaseImageExists} from "./ova-cache";
 
 import {VirtualBoxUtils} from "./virtualbox-utils";
 import {randomBytes} from "crypto";
@@ -6,7 +5,14 @@ import * as fs from "fs";
 import * as path from "path";
 import {DeploymentUtils} from "./deployment-utils";
 import * as os from "os";
-import {homeDirectoryName, imageFileName} from "./constants";
+import {
+    foodDatabaseFileName,
+    homeDirectoryName,
+    imageDatabaseFileName,
+    imageFileName,
+    systemDatabaseFileName
+} from "./constants";
+import {ensureFileExists} from "./download-cache";
 
 const config = require("./config.js");
 
@@ -20,6 +26,9 @@ const homeDirectoryPath = config.homeDirectoryOverride ?
     path.resolve(config.homeDirectoryOverride, homeDirectoryName) : path.resolve(os.homedir(), homeDirectoryName);
 
 const imageFilePath = path.resolve(homeDirectoryPath, imageFileName);
+const systemDatabaseFilePath = path.resolve(homeDirectoryPath, systemDatabaseFileName);
+const foodDatabaseFilePath = path.resolve(homeDirectoryPath, foodDatabaseFileName);
+const imageDatabaseFilePath = path.resolve(homeDirectoryPath, imageDatabaseFileName);
 
 const alternativeImageFilePath = (config.virtualbox.homeDirectoryOverride) ?
     `${config.virtualbox.homeDirectoryOverride}/${homeDirectoryName}/${imageFileName}` : undefined;
@@ -40,11 +49,25 @@ async function main(): Promise<void> {
 
     await ensureHomeDirectoryExists();
 
-    console.log(`Using "${homeDirectoryPath}" for VM image downloads`);
+    console.log(`Using "${homeDirectoryPath}" for file downloads`);
+    console.log(`\nVerifying and downloading resources...`);
 
-    await ensureBaseImageExists(imageFilePath, config.image.sha256, config.image.downloadUrl);
+    console.log(`\nBase VM image:`);
+    await ensureFileExists(imageFilePath, config.ova.sha256, config.ova.downloadUrl, config.skipIntegrityChecks);
 
-    console.log(`Starting build (id: ${buildId})`);
+    console.log(`\nSystem database:`);
+    await ensureFileExists(systemDatabaseFilePath, config.systemDatabase.sha256, config.systemDatabase.downloadUrl,
+        config.skipIntegrityChecks);
+
+    console.log(`\nFood database:`);
+    await ensureFileExists(foodDatabaseFilePath, config.foodDatabase.sha256, config.foodDatabase.downloadUrl,
+        config.skipIntegrityChecks);
+
+    console.log(`\nImage database:`);
+    await ensureFileExists(imageDatabaseFilePath, config.imageDatabase.sha256, config.imageDatabase.downloadUrl,
+        config.skipIntegrityChecks);
+
+    console.log(`\nStarting build (id: ${buildId})`);
 
     const vmName = `${config.virtualbox.vmname} ${buildId}`;
 

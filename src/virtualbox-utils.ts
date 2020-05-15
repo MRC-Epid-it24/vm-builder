@@ -13,12 +13,12 @@ export class VirtualBoxUtils {
     }
 
     async import(imagePath: string, name: string): Promise<void> {
-        console.log(`Importing "${imagePath}" into VirtualBox as "${name}"...`);
+        console.log(`\nImporting "${imagePath}" into VirtualBox as "${name}"...`);
         return this.exec(["import", imagePath, "--vsys", "0", "--vmname", name]);
     }
 
     async start(name: string): Promise<void> {
-        console.log(`Starting VM: ${name}...`)
+        console.log(`\nStarting VM: ${name}...`)
         return this.exec(["startvm", name, "--type", "headless"]);
     }
 }
