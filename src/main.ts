@@ -1,4 +1,3 @@
-
 import {VirtualBoxUtils} from "./virtualbox-utils";
 import {randomBytes} from "crypto";
 import * as fs from "fs";
@@ -13,14 +12,12 @@ import {
     systemDatabaseFileName
 } from "./constants";
 import {ensureFileExists} from "./download-cache";
+import {Configuration} from "./config-types";
 
-const config = require("./config.js");
+const config: Configuration = require("./config.js");
 
-const vbox = new VirtualBoxUtils(config.virtualbox.command);
+const vbox = new VirtualBoxUtils(config.virtualBox.command);
 
-const deployment = new DeploymentUtils(config.deployment.ansiblePlaybookCommand,
-    config.deployment.directory,
-    config.virtualbox.ip4address);
 
 const homeDirectoryPath = config.homeDirectoryOverride ?
     path.resolve(config.homeDirectoryOverride, homeDirectoryName) : path.resolve(os.homedir(), homeDirectoryName);
@@ -30,8 +27,8 @@ const systemDatabaseFilePath = path.resolve(homeDirectoryPath, systemDatabaseFil
 const foodDatabaseFilePath = path.resolve(homeDirectoryPath, foodDatabaseFileName);
 const imageDatabaseFilePath = path.resolve(homeDirectoryPath, imageDatabaseFileName);
 
-const alternativeImageFilePath = (config.virtualbox.homeDirectoryOverride) ?
-    `${config.virtualbox.homeDirectoryOverride}/${homeDirectoryName}/${imageFileName}` : undefined;
+const alternativeImageFilePath = (config.virtualBox.homeDirectoryOverride) ?
+    `${config.virtualBox.homeDirectoryOverride}/${homeDirectoryName}/${imageFileName}` : undefined;
 
 async function ensureHomeDirectoryExists(): Promise<void> {
     try {
@@ -44,13 +41,13 @@ async function ensureHomeDirectoryExists(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-    const buildId = (config.buildIdOverride)? config.buildIdOverride : randomBytes(8).toString('hex');
+    const buildId = (config.buildIdOverride) ? config.buildIdOverride : randomBytes(8).toString('hex');
     const buildDirectory = path.resolve(homeDirectoryPath, buildId);
 
     await ensureHomeDirectoryExists();
 
-    console.log(`Using "${homeDirectoryPath}" for file downloads`);
-    console.log(`\nVerifying and downloading resources...`);
+    console.log(`\n>>> Verifying and downloading resources >>>`);
+    console.log(`\nUsing "${homeDirectoryPath}" for file downloads`);
 
     console.log(`\nBase VM image:`);
     await ensureFileExists(imageFilePath, config.ova.sha256, config.ova.downloadUrl, config.skipIntegrityChecks);
@@ -69,7 +66,7 @@ async function main(): Promise<void> {
 
     console.log(`\nStarting build (id: ${buildId})`);
 
-    const vmName = `${config.virtualbox.vmname} ${buildId}`;
+    const vmName = `${config.virtualBox.vmname} ${buildId}`;
 
     if (alternativeImageFilePath)
         await vbox.import(alternativeImageFilePath, vmName);
@@ -78,10 +75,27 @@ async function main(): Promise<void> {
 
     await vbox.start(vmName);
 
-    await deployment.initInstanceDirectory(buildId);
+    const deployment = new DeploymentUtils(config, buildId);
 
-    process.stdout.write(deployment.resolveBuildInstanceDirectoryPath(buildId) + "\n");
+    await deployment.initInstanceDirectory();
 
+    await deployment.createDeployUser();
+
+    await deployment.switchToDeployUser();
+
+    await deployment.configureNginx();
+
+    await deployment.configureJava();
+
+    await deployment.createDatabases(homeDirectoryPath);
+
+    await deployment.installApiServer();
+
+    await deployment.copyImages(homeDirectoryPath);
+
+    await deployment.installRespondentFrontend();
+
+    await deployment.installAdminFrontend();
 }
 
 main().catch(reason => {
