@@ -40,3 +40,6 @@ dist/**/*
 
 # ignore yarn.lock
 yarn.lock
+
+# Ignore build config file (contains keys)
+build/config.js
