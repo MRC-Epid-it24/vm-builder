@@ -43,3 +43,4 @@ yarn.lock
 
 # Ignore build config file (contains keys)
 build/config.js
+build/log.txt
