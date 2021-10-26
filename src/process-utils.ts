@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { ensureFileExists } from "./download-cache";
-import { Configuration } from "./config-types";
+import { Configuration, OneInputFunction, Payload } from "./config-types";
 import { VirtualBoxUtils } from "./virtualbox-utils";
 import {
   foodDatabaseFileName,
@@ -34,27 +34,27 @@ async function ensureHomeDirectoryExists(
   }
 }
 
-export async function ensureHomeDirectoryandCacheExistence(
-  homeDirectoryPath: string
-): Promise<void> {
-  await ensureHomeDirectoryExists(homeDirectoryPath);
+export const ensureHomeDirectoryandCacheExistence: OneInputFunction = async (
+  payload: Payload
+) => {
+  await ensureHomeDirectoryExists(payload.homeDirectoryPath);
 
-  const imageFilePath = path.resolve(homeDirectoryPath, imageFileName);
+  const imageFilePath = path.resolve(payload.homeDirectoryPath, imageFileName);
   const systemDatabaseFilePath = path.resolve(
-    homeDirectoryPath,
+    payload.homeDirectoryPath,
     systemDatabaseFileName
   );
   const foodDatabaseFilePath = path.resolve(
-    homeDirectoryPath,
+    payload.homeDirectoryPath,
     foodDatabaseFileName
   );
   const imageDatabaseFilePath = path.resolve(
-    homeDirectoryPath,
+    payload.homeDirectoryPath,
     imageDatabaseFileName
   );
 
   console.log(`\n>>> Verifying and downloading resources >>>`);
-  console.log(`\nUsing "${homeDirectoryPath}" for file downloads`);
+  console.log(`\nUsing "${payload.homeDirectoryPath}" for file downloads`);
 
   console.log(`\nBase VM image:`);
   await ensureFileExists(
@@ -87,23 +87,26 @@ export async function ensureHomeDirectoryandCacheExistence(
     config.imageDatabase.downloadUrl,
     config.skipIntegrityChecks
   );
-}
 
-export async function virtualMachineStart(
-  homeDirectoryPath: string,
-  buildId: string
-): Promise<void> {
+  return "[0]: Initial chores completed (cache exists, files downloaded)";
+};
+
+export const virtualMachineStart: OneInputFunction = async (
+  payload: Payload
+) => {
   const alternativeImageFilePath = config.virtualBox.homeDirectoryOverride
     ? `${config.virtualBox.homeDirectoryOverride}/${homeDirectoryName}/${imageFileName}`
     : undefined;
 
-  const imageFilePath = path.resolve(homeDirectoryPath, imageFileName);
+  const imageFilePath = path.resolve(payload.homeDirectoryPath, imageFileName);
 
   const vbox = new VirtualBoxUtils(config.virtualBox.command);
 
-  console.log(`\nStarting build (id: ${buildId})`);
+  let log = "[1]: Virtual Machine initialization crashed";
 
-  const vmName = `${config.virtualBox.vmname} ${buildId}`;
+  console.log(`\nStarting build (id: ${payload.buildId})`);
+
+  const vmName = `${config.virtualBox.vmname} ${payload.buildId}`;
 
   if (alternativeImageFilePath)
     await vbox.import(alternativeImageFilePath, vmName);
@@ -115,9 +118,9 @@ export async function virtualMachineStart(
   await vbox
     .start(vmName)
     .then((result) => {
-      fs.writeFileSync("./log.txt", "[1]: VBox started");
+      log = "[1]: VBox started";
     })
     .catch((err) => {
-      fs.writeFileSync("./log.txt", "[1]: VBox stasrt error: ", err);
+      log = "[1]: Virtual Machine initialization crashed" + err;
     });
-}
+};
