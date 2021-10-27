@@ -91,6 +91,8 @@ From the root vm-builder folder, run:
 `cd build`
 `node main.js`
 
+Type `node main.js --help` to see available options.
+
 This will download 4 large files, and may take some time. Once this is done it will initialise VirtualBox and import the VM
 
 You may need to close the VirtualBox main window (not the VM) to allow the vm-builder script to continue.
