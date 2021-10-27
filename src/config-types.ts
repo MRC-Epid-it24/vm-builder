@@ -25,11 +25,13 @@ export interface ApiServerConfig {
 
 export interface AdminConfig {
   port: string;
+  address: string;
 }
 
 export interface FrontendConfig {
   port: string;
   debianPackagePath: string;
+  address: string;
 }
 
 export interface Configuration {

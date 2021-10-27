@@ -9,6 +9,10 @@ import {
   configureNginx,
   configureJava,
   createDatabases,
+  copyImages,
+  installApiServer,
+  installRespondentFrontend,
+  installAdminFrontend,
 } from "./deployment-utils-alternative";
 import * as os from "os";
 import { homeDirectoryName } from "./constants";
@@ -20,7 +24,9 @@ import {
 
 const config: Configuration = require("./config.js");
 
-const inputCommand = process.argv[2];
+let inputCommand = parseInt(process.argv[2], 10)
+  ? parseInt(process.argv[2], 10)
+  : 0;
 
 const homeDirectoryPath = config.homeDirectoryOverride
   ? path.resolve(config.homeDirectoryOverride, homeDirectoryName)
@@ -88,47 +94,36 @@ async function main(): Promise<void> {
       fn: createDatabases,
       payload: payload,
     },
-    // deployment.installApiServer, 		// 8
-    // deployment.copyImages, 				// 9
-    // deployment.installRespondentFrontend,// 10
-    // deployment.installAdminFrontend, 	// 11
+    // [8]: Copy Images to server TODO: Fix the image-database/config.json' - no such filel or directory
+    // {
+    //   fn: copyImages,
+    //   payload: payload,
+    // },
+    // [9]: Install API Server
+    {
+      fn: installApiServer,
+      payload: payload,
+    },
+    // [10]: Install Survey frontend
+    {
+      fn: installRespondentFrontend,
+      payload: payload,
+    },
+    // [11]: Install Admin Frontend
+    {
+      fn: installAdminFrontend,
+      payload: payload,
+    },
   ];
 
-  for (let index = 0; index < exFunctions.length; index++) {
+  if (inputCommand > exFunctions.length - 1) inputCommand = 0;
+  console.log("Starting from the step ", inputCommand);
+
+  for (let index = inputCommand; index < exFunctions.length; index++) {
     const log = await exFunctions[index].fn(exFunctions[index].payload);
     if (log !== undefined) fs.writeFileSync("./log.txt", log + "");
     else fs.writeFileSync("./log.txt", "[" + index.toString + "]");
   }
-
-  /**
-   * [0]: Initial chores to ensure the existing of all necessaryt files and directories
-   */
-  //await ensureHomeDirectoryandCacheExistence(homeDirectoryPath);
-
-  /**
-   * [1]: Starting virtual box machine
-   */
-  //await virtualMachineStart(homeDirectoryPath, buildId);
-
-  // await deployment.initInstanceDirectory();
-
-  //   await deployment.createDeployUser();
-
-  //   await deployment.switchToDeployUser();
-
-  //   await deployment.configureNginx();
-
-  //   await deployment.configureJava();
-
-  //   await deployment.createDatabases(homeDirectoryPath);
-
-  //   await deployment.installApiServer();
-
-  //   await deployment.copyImages(homeDirectoryPath);
-
-  //   await deployment.installRespondentFrontend();
-
-  //   await deployment.installAdminFrontend();
 }
 
 main().catch((reason) => {
