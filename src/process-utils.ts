@@ -124,3 +124,45 @@ export const virtualMachineStart: OneInputFunction = async (
       log = "[1]: Virtual Machine initialization crashed" + err;
     });
 };
+
+export const showConsoleMessage = (key: string | number): void => {
+  console.log("inside showMessage");
+  switch (key) {
+    case "--help":
+      console.log("=============Info================");
+      console.log(
+        "Run node main.js to execute full process of VM creation. \nProvide arguments to this script: node main.js [command]|[step to start from = 0] [step to finish on = last ] \n"
+      );
+      console.log(
+        "\x1b[36m%s\x1b[0m",
+        "[command] - command to run. Available commands \n\
+          --help - display this help message and available steps\n" +
+          "[step to start from] - starting step of the process. By default starts from the 0. \n" +
+          "[step to finish on] - finishing step of the process. By default exeutes all available steps = length of the whole set of steps \n" +
+          "Steps: \n\
+          [0]: Initial chores to ensure the existing of all necessaryt files and directories\n\
+          [1]: Starting virtual box machine\n\
+          [2]: Initializing Deployemnt directory\n\
+          [3]: Creating Deploying user, replacing templates and uploading key to VM\n\
+          [4]: Switching to Deploy user for SSH to server\n\
+          [5]: Configure Nginx in deployment directory\n\
+          [6]: Configure Java at the server\n\
+          [7]: Creating and Populating Database"
+      );
+      console.log(
+        "\x1b[31m%s\x1b[31m",
+        "          [8]: Copy Images to server - Switched off"
+      );
+      console.log(
+        "\x1b[36m%s\x1b[0m",
+        "          [9]: Install API Server\n\
+          [10]: Install Survey frontend\n\
+          [11]: Install Admin Frontend"
+      );
+      console.log("\x1b[0m%s\x1b[0m", " ");
+      break;
+    default:
+      console.log("Please type --help to see available options");
+      break;
+  }
+};

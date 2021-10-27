@@ -1,7 +1,6 @@
 import * as fs from "fs";
 import { randomBytes } from "crypto";
 import * as path from "path";
-import { DeploymentUtils } from "./deployment-utils";
 import {
   initInstanceDirectory,
   createDeployUser,
@@ -20,13 +19,15 @@ import { Configuration, ArrayofFunctions, Payload } from "./config-types";
 import {
   ensureHomeDirectoryandCacheExistence,
   virtualMachineStart,
+  showConsoleMessage,
 } from "./process-utils";
+import { exit } from "process";
 
 const config: Configuration = require("./config.js");
 
-let inputCommand = parseInt(process.argv[2], 10)
-  ? parseInt(process.argv[2], 10)
-  : 0;
+const inputOne = process.argv[2];
+
+let inputCommand = parseInt(inputOne, 10) ? parseInt(inputOne, 10) : 0;
 
 const homeDirectoryPath = config.homeDirectoryOverride
   ? path.resolve(config.homeDirectoryOverride, homeDirectoryName)
@@ -36,6 +37,11 @@ const buildId = config.buildIdOverride
   : randomBytes(8).toString("hex");
 
 async function main(): Promise<void> {
+  if (inputOne === "--help") {
+    showConsoleMessage(inputOne);
+    process.exit();
+  }
+
   const payload: Payload = {
     homeDirectoryPath: homeDirectoryPath,
     buildId: buildId,
@@ -51,11 +57,7 @@ async function main(): Promise<void> {
     ),
   };
 
-  const buildDirectory = path.resolve(homeDirectoryPath, buildId);
-  const deployment = new DeploymentUtils(config, buildId);
-
   //Building functions to execute:
-  // TODO: allow user to continue from the last step of the process
   const exFunctions: ArrayofFunctions = [
     // [0]: Initial chores to ensure the existing of all necessaryt files and directories
     {
