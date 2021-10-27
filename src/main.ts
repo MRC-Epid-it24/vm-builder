@@ -6,6 +6,9 @@ import {
   initInstanceDirectory,
   createDeployUser,
   switchToDeployUser,
+  configureNginx,
+  configureJava,
+  createDatabases,
 } from "./deployment-utils-alternative";
 import * as os from "os";
 import { homeDirectoryName } from "./constants";
@@ -70,9 +73,21 @@ async function main(): Promise<void> {
       fn: switchToDeployUser,
       payload: payload,
     },
-    // deployment.configureNginx, 			// 5
-    // deployment.configureJava, 			// 6
-    // deployment.createDatabases, 			// 7
+    // [5]: Configure Nginx in deployment directory
+    {
+      fn: configureNginx,
+      payload: payload,
+    },
+    // [6]: Configure Java at the server
+    {
+      fn: configureJava,
+      payload: payload,
+    },
+    // [7]: Creating and Populating Database
+    {
+      fn: createDatabases,
+      payload: payload,
+    },
     // deployment.installApiServer, 		// 8
     // deployment.copyImages, 				// 9
     // deployment.installRespondentFrontend,// 10

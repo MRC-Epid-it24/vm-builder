@@ -164,3 +164,67 @@ export const switchToDeployUser: OneInputFunction = async (
 
   return `[4]: Switching to Deploy user for SSH to server ${payload.buildId}`;
 };
+
+export const configureNginx: OneInputFunction = async (
+  payload: Payload
+): Promise<string> => {
+  console.log("\n>>> Configuring nginx >>>");
+  await execDeploymentScript("configure-nginx.sh", payload.buildId);
+  return `[5]: Configured Nginx in deployment directory for ${payload.buildId}`;
+};
+
+export const configureJava: OneInputFunction = async (payload: Payload) => {
+  console.log("\n>>> Configuring Java >>>");
+  await execDeploymentScript("configure-java.sh", payload.buildId);
+  return `[6]: Configured Java at the server (${config.virtualBox.ip4address}) for ${payload.buildId}`;
+};
+
+export const createDatabases: OneInputFunction = async (
+  payload: Payload
+): Promise<string> => {
+  console.log("\n>>> Creating databases >>>");
+
+  await exec_display_output(
+    "unzip",
+    ["-o", systemDatabaseFileName],
+    payload.homeDirectoryPath
+  );
+
+  await replaceInFileMultiple(
+    path.resolve(
+      payload.buildInstanceDirectoryPath,
+      "database",
+      "postgres-configuration.yml"
+    ),
+    [
+      {
+        regex: "schema_snapshot_path:.*$",
+        replacement: `schema_snapshot_path: ${path.resolve(
+          payload.homeDirectoryPath,
+          systemDatabaseSchemaFileName
+        )}`,
+      },
+      {
+        regex: "data_snapshot_path:.*$",
+        replacement: `data_snapshot_path: ${path.resolve(
+          payload.homeDirectoryPath,
+          systemDatabaseDataFileName
+        )}`,
+      },
+      {
+        regex: "(^\\s+snapshot_path):.*$",
+        replacement: `$1: ${path.resolve(
+          payload.homeDirectoryPath,
+          foodDatabaseFileName
+        )}`,
+      },
+      {
+        regex: "admin_user_email:.*$",
+        replacement: "admin_user_email: admin@localhost",
+      },
+    ]
+  );
+
+  await execDeploymentScript("create-databases.sh", payload.buildId);
+  return `[7]: Database at ${config.virtualBox.ip4address} has been created and populating with data`;
+};
